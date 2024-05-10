@@ -1,0 +1,24 @@
+{
+	"folders": [
+		{
+			"name": "Telematic_Group_C",
+			"path": "."
+		},
+		{
+			"name": "Trip History",
+			"path": "../Trip History"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"chrono": "cpp",
+			"algorithm": "cpp",
+			"system_error": "cpp",
+			"array": "cpp",
+			"istream": "cpp",
+			"limits": "cpp",
+			"functional": "cpp",
+			"typeinfo": "cpp"
+		}
+	}
+}
