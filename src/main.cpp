@@ -179,7 +179,7 @@ void loop() {
       double lngDiff = abs(firstLng - currentLng1mnt);
 
       // Membandingkan data pertama dengan data terbaru
-      if (latDiff < changeStartRange || lngDiff < changeStartRange) {
+      if (latDiff > changeStartRange || lngDiff > changeStartRange) {
         Serial.println("Data telah berubah setelah 1 menit!");
         secondStartTime = millis(); // Mulai hitungan 3 menit
         finishTime = true;
@@ -191,7 +191,7 @@ void loop() {
     }
     // Membandingkan data setelah 3 menit
 
-    if (millis() - secondStartTime >= 120000 && secondStartTime != 0 && finishTime==true) { // 3 menit
+    if (millis() - secondStartTime >= 180000 && secondStartTime != 0 && finishTime==true) { // 3 menit
       currentLat3mnt = gps.location.lat();
       currentLng3mnt = gps.location.lng();
 
@@ -218,7 +218,7 @@ void loop() {
       thirdStartTime = millis(); // Mulai timer 30 menit
     }
 
-    if (thirdStartTime != 0 && millis() - thirdStartTime >= 200000) { // 30 menit
+    if (thirdStartTime != 0 && millis() - thirdStartTime >= 1800000) { // 30 menit
       currentLat30mnt = gps.location.lat();
       currentLng30mnt = gps.location.lng();
 
