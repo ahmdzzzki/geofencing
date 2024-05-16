@@ -29,7 +29,7 @@ String websocketAddress ;
 String lastReceivedMessage = "";
 
 const int serverPort = 3100; // Port server WebSocket
-static const int RXPin = D6, TXPin = D5;
+static const int RXPin = D5, TXPin = D6;
 const uint32_t GPSBaud = 38400;
 const int buzzer = D7; // Pin untuk buzzer
 const int led = D0;
@@ -75,8 +75,8 @@ bool finishTime = false ;
 bool isNotChanged3mnt = false;
 const long periode = 1000;
 bool isFirstDataReceived = false ;
-double changeRange  = 0.001;
-double changeStartRange = 0.002;
+double changeRange  = 0.005;
+double changeStartRange = 0.005;
 int tripId ;
 
 void webSocketConnect();
@@ -118,7 +118,8 @@ void setup() {
     String vinFromEEPROM = readFromEEPROM(0,11);
     if (vinFromEEPROM.length() > 0) {
         Serial.println("vin dibaca dari EEPROM: " + vinFromEEPROM);
-        vin = vinFromEEPROM ;
+       // vin = vinFromEEPROM ;
+        vin = "1HBGH1J787E";
     } else {
         Serial.println("Tidak ada vin yang ditemukan di EEPROM.");
         vin = "1HBGH1J787E";
@@ -246,7 +247,7 @@ void loop() {
       thirdStartTime = 0; // Reset thirdStartTime
     }
   
-  // if(millis () - raspyTime >= 5000 && gps.location.isUpdated()){
+  // if(millis () - raspyTime >= 1000 && gps.location.isUpdated()){
   //     raspyTime = millis();
   //     DynamicJsonDocument doc(200);
   //     String raspyData;  
@@ -589,7 +590,7 @@ void UpdatePolygon(String incomingMessage){
 void processGeofencingData() {
     char readData[512]; // Buffer untuk menyimpan data yang dibaca dari EEPROM
     readExternalEEPROM(readData, sizeof(readData)); // Membaca data geofencing dari EEPROM
-   // Serial.println(readData);
+    Serial.println(readData);
     // Parse data JSON yang dibaca dari EEPROM
     DynamicJsonDocument doc (512);
     DeserializationError deserializeError = deserializeJson(doc, readData);
