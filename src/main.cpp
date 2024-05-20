@@ -23,7 +23,7 @@ String baseUrlTripHistory ="http://103.190.28.211:3000/api/v1/trip";
 String baseUrl = "http://103.190.28.211:3000/api/v1/geofencing?vehicle_id="; // Alamat IP server API
 String url ;
 //String baseUrl = "http://0gw901vv-3000.asse.devtunnels.ms?vehicle_id=1HBGH1J787E"; // Alamat IP server API
-String basewebsocketAddress = "ws://103.190.28.211:3100/geofencing?vehicle_id="; // Alamat IP server API
+String basewebsocketAddress = "ws://103.190.28.211:3100/geofencing?vehicle_id="; // Alamat IP server API  
 String websocketAddress ;
 //const char* websocketAddress = "ws://0gw901vv-3100.asse.devtunnels.ms?vehicle_id="+vin+"&device=GPS"; // Alamat IP server API
 String lastReceivedMessage = "";
@@ -590,7 +590,7 @@ void UpdatePolygon(String incomingMessage){
 void processGeofencingData() {
     char readData[512]; // Buffer untuk menyimpan data yang dibaca dari EEPROM
     readExternalEEPROM(readData, sizeof(readData)); // Membaca data geofencing dari EEPROM
-    Serial.println(readData);
+    //Serial.println(readData);
     // Parse data JSON yang dibaca dari EEPROM
     DynamicJsonDocument doc (512);
     DeserializationError deserializeError = deserializeJson(doc, readData);
@@ -743,7 +743,7 @@ void sendLocation(String target,float lat , float lng) {
     serializeJson(doc, jsonString);
 
     client.send(jsonString);
-    //Serial.println("Sent data to server: " + jsonString);
+    Serial.println("Sent data to server: " + jsonString);
   //  } else {
   //    Serial.println("GPS location is not valid.");
   //  }
