@@ -23,13 +23,13 @@ String baseUrlTripHistory ="http://103.190.28.211:3000/api/v1/trip";
 String baseUrl = "http://103.190.28.211:3000/api/v1/geofencing?vehicle_id="; // Alamat IP server API
 String url ;
 //String baseUrl = "http://0gw901vv-3000.asse.devtunnels.ms?vehicle_id=1HBGH1J787E"; // Alamat IP server API
-String basewebsocketAddress = "ws://103.190.28.211:3100/?vehicle_id="; // Alamat IP server API
+String basewebsocketAddress = "ws://103.190.28.211:3100/geofencing?vehicle_id="; // Alamat IP server API
 String websocketAddress ;
 //const char* websocketAddress = "ws://0gw901vv-3100.asse.devtunnels.ms?vehicle_id="+vin+"&device=GPS"; // Alamat IP server API
 String lastReceivedMessage = "";
 
 const int serverPort = 3100; // Port server WebSocket
-static const int RXPin = D5, TXPin = D6;
+static const int RXPin = D6, TXPin = D5;
 const uint32_t GPSBaud = 38400;
 const int buzzer = D7; // Pin untuk buzzer
 const int led = D0;
