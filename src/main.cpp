@@ -75,8 +75,8 @@ bool finishTime = false ;
 bool isNotChanged3mnt = false;
 const long periode = 1000;
 bool isFirstDataReceived = false ;
-double changeRange  = 0.001;
-double changeStartRange = 0.002;
+double changeRange  = 0.0004;
+double changeStartRange = 0.0002;
 int tripId ;
 
 void webSocketConnect();
@@ -219,7 +219,7 @@ void loop() {
       thirdStartTime = millis(); // Mulai timer 30 menit
     }
 
-    if (thirdStartTime != 0 && millis() - thirdStartTime >= 1800000) { // 30 menit
+    if (thirdStartTime != 0 && millis() - thirdStartTime >= 600000) { // 30 menit
       currentLat30mnt = gps.location.lat();
       currentLng30mnt = gps.location.lng();
 
