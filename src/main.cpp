@@ -23,7 +23,7 @@ String baseUrlTripHistory ="http://103.190.28.211:3000/api/v1/trip";
 String baseUrl = "http://103.190.28.211:3000/api/v1/geofencing?vehicle_id="; // Alamat IP server API
 String url ;
 //String baseUrl = "http://0gw901vv-3000.asse.devtunnels.ms?vehicle_id=1HBGH1J787E"; // Alamat IP server API
-String basewebsocketAddress = "ws://103.190.28.211:3300/geofencing?vehicle_id="; // Alamat IP server API
+String basewebsocketAddress = "ws://103.190.28.211:3300/geofencing?vehicle_id="; // Alamat IP server API  
 String websocketAddress ;
 //const char* websocketAddress = "ws://0gw901vv-3100.asse.devtunnels.ms?vehicle_id="+vin+"&device=GPS"; // Alamat IP server API
 String lastReceivedMessage = "";
@@ -76,8 +76,10 @@ bool finishTime = false ;
 bool isNotChanged3mnt = false;
 const long periode = 1000;
 bool isFirstDataReceived = false ;
+
 double changeRange  = 0.0004;
 double changeStartRange = 0.0002;
+
 int tripId ;
 
 void webSocketConnect();
@@ -248,7 +250,7 @@ void loop() {
       thirdStartTime = 0; // Reset thirdStartTime
     }
   
-  // if(millis () - raspyTime >= 5000 && gps.location.isUpdated()){
+  // if(millis () - raspyTime >= 1000 && gps.location.isUpdated()){
   //     raspyTime = millis();
   //     DynamicJsonDocument doc(200);
   //     String raspyData;  
@@ -744,7 +746,7 @@ void sendLocation(String target,float lat , float lng) {
     serializeJson(doc, jsonString);
 
     client.send(jsonString);
-    //Serial.println("Sent data to server: " + jsonString);
+    Serial.println("Sent data to server: " + jsonString);
   //  } else {
   //    Serial.println("GPS location is not valid.");
   //  }
