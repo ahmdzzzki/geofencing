@@ -11,8 +11,8 @@
 
 #define M1 0x50 // Alamat Perangkat I2C
 #define EEPROM_SIZE 512
-const char* ssid = "Hanya Untuk Masyarakat Miskin"; // SSID WiFi
-const char* password = "abogoboga"; // Password WiFi
+const char* ssid = "Telematics "; // SSID WiFi
+const char* password = "36689Asp"; // Password WiFi
 String nopol ="";
 String vin = "";
 String postUrlTripHistory;
@@ -23,16 +23,17 @@ String baseUrlTripHistory ="http://103.190.28.211:3000/api/v1/trip";
 String baseUrl = "http://103.190.28.211:3000/api/v1/geofencing?vehicle_id="; // Alamat IP server API
 String url ;
 //String baseUrl = "http://0gw901vv-3000.asse.devtunnels.ms?vehicle_id=1HBGH1J787E"; // Alamat IP server API
-String basewebsocketAddress = "ws://103.190.28.211:3100/geofencing?vehicle_id="; // Alamat IP server API  
+String basewebsocketAddress = "ws://103.190.28.211:3300/geofencing?vehicle_id="; // Alamat IP server API  
 String websocketAddress ;
 //const char* websocketAddress = "ws://0gw901vv-3100.asse.devtunnels.ms?vehicle_id="+vin+"&device=GPS"; // Alamat IP server API
 String lastReceivedMessage = "";
 
 const int serverPort = 3100; // Port server WebSocket
-static const int RXPin = D5, TXPin = D6;
+static const int RXPin = D5, TXPin = D6 ;
 const uint32_t GPSBaud = 38400;
 const int buzzer = D7; // Pin untuk buzzer
 const int led = D0;
+const int led_2 = D8;
 const int relay = D8; 
 
 const unsigned int EEPROM_ADDRESS = 0; // Alamat awal di EEPROM untuk menyimpan data
@@ -75,8 +76,10 @@ bool finishTime = false ;
 bool isNotChanged3mnt = false;
 const long periode = 1000;
 bool isFirstDataReceived = false ;
-double changeRange  = 0.005;
-double changeStartRange = 0.005;
+
+double changeRange  = 0.0004;
+double changeStartRange = 0.0002;
+
 int tripId ;
 
 void webSocketConnect();
@@ -118,7 +121,7 @@ void setup() {
     String vinFromEEPROM = readFromEEPROM(0,11);
     if (vinFromEEPROM.length() > 0) {
         Serial.println("vin dibaca dari EEPROM: " + vinFromEEPROM);
-       // vin = vinFromEEPROM ;
+        //vin = vinFromEEPROM ;
         vin = "1HBGH1J787E";
     } else {
         Serial.println("Tidak ada vin yang ditemukan di EEPROM.");
@@ -180,7 +183,7 @@ void loop() {
       double lngDiff = abs(firstLng - currentLng1mnt);
 
       // Membandingkan data pertama dengan data terbaru
-      if (latDiff < changeStartRange || lngDiff < changeStartRange) {
+      if (latDiff > changeStartRange || lngDiff > changeStartRange) {
         Serial.println("Data telah berubah setelah 1 menit!");
         secondStartTime = millis(); // Mulai hitungan 3 menit
         finishTime = true;
@@ -192,7 +195,7 @@ void loop() {
     }
     // Membandingkan data setelah 3 menit
 
-    if (millis() - secondStartTime >= 120000 && secondStartTime != 0 && finishTime==true) { // 3 menit
+    if (millis() - secondStartTime >= 180000 && secondStartTime != 0 && finishTime==true) { // 3 menit
       currentLat3mnt = gps.location.lat();
       currentLng3mnt = gps.location.lng();
 
@@ -219,7 +222,7 @@ void loop() {
       thirdStartTime = millis(); // Mulai timer 30 menit
     }
 
-    if (thirdStartTime != 0 && millis() - thirdStartTime >= 200000) { // 30 menit
+    if (thirdStartTime != 0 && millis() - thirdStartTime >= 600000) { // 30 menit
       currentLat30mnt = gps.location.lat();
       currentLng30mnt = gps.location.lng();
 
@@ -590,14 +593,14 @@ void UpdatePolygon(String incomingMessage){
 void processGeofencingData() {
     char readData[512]; // Buffer untuk menyimpan data yang dibaca dari EEPROM
     readExternalEEPROM(readData, sizeof(readData)); // Membaca data geofencing dari EEPROM
-    //Serial.println(readData);
+    Serial.println(readData);
     // Parse data JSON yang dibaca dari EEPROM
     DynamicJsonDocument doc (512);
     DeserializationError deserializeError = deserializeJson(doc, readData);
     if (deserializeError) {
         Serial.print(F("deserializeJson() failed3: "));
         Serial.println(deserializeError.c_str());
-        digitalWrite(led,HIGH);
+        digitalWrite(led_2,HIGH);
         return;
     }
 
@@ -836,8 +839,13 @@ void saveExternalEEPROM(const char* data) {
     // Menghapus data sebelumnya dengan menulis NULL
     for (size_t i = 0; i < len; i++) {
         Wire.beginTransmission(M1); // Mulai transmisi I2C ke perangkat
-        Wire.write(address >> 8); // MSB dari alamat EEPROM
-        Wire.write(address & 0xFF); // LSB dari alamat EEPROM
+        // Wire.write(address >> 8); // MSB dari alamat EEPROM
+        // Wire.write(address & 0xFF); // LSB dari alamat EEPROM
+
+            Wire.write((int)((i >> 8) & 0xFF)); // MSB
+            Wire.write((int)(i & 0xFF)); // LSB
+
+
         Wire.write(data[i]); // Menulis karakter JSON ke EEPROM
         Wire.endTransmission(); // Selesai transmisi
         address++; // Pindah ke alamat berikutnya di EEPROM
