@@ -11,8 +11,8 @@
 
 #define M1 0x50 // Alamat Perangkat I2C
 #define EEPROM_SIZE 512
-const char* ssid = "Telematics "; // SSID WiFi
-const char* password = "36689Asp"; // Password WiFi
+const char* ssid = "Hanya Untuk Masyarakat Miskin"; // SSID WiFi
+const char* password = "abogoboga"; // Password WiFi
 String nopol ="";
 String vin = "";
 String postUrlTripHistory;
@@ -152,9 +152,10 @@ void setup() {
  // timer.setInterval(2000,sendLocation)
   getTrip();
   getToServer();
-  // char readData[512]; 
-  //  readExternalEEPROM(readData, sizeof(readData));
-  //  Serial.println(readData);
+   char readData[512]; 
+   readExternalEEPROM(readData, sizeof(readData));
+   Serial.print("Data EEPROM");
+   Serial.println(readData);
 }
 
 void loop() {
@@ -294,6 +295,7 @@ void loop() {
   if (isSendingStolenLocation) {
       sendStolenLocation(); // Kirim lokasi "dicuri" secara terus-menerus
     }
+    processGeofencingData();
  }
 }
 
@@ -839,17 +841,17 @@ void saveExternalEEPROM(const char* data) {
     // Menghapus data sebelumnya dengan menulis NULL
     for (size_t i = 0; i < len; i++) {
         Wire.beginTransmission(M1); // Mulai transmisi I2C ke perangkat
-        // Wire.write(address >> 8); // MSB dari alamat EEPROM
-        // Wire.write(address & 0xFF); // LSB dari alamat EEPROM
+        Wire.write(address >> 8); // MSB dari alamat EEPROM
+        Wire.write(address & 0xFF); // LSB dari alamat EEPROM
 
-            Wire.write((int)((i >> 8) & 0xFF)); // MSB
-            Wire.write((int)(i & 0xFF)); // LSB
+            // Wire.write((int)((i >> 8) & 0xFF)); // MSB
+            // Wire.write((int)(i & 0xFF)); // LSB
 
 
         Wire.write(data[i]); // Menulis karakter JSON ke EEPROM
         Wire.endTransmission(); // Selesai transmisi
         address++; // Pindah ke alamat berikutnya di EEPROM
-        delay(5); // Delay untuk memberikan waktu EEPROM untuk menulis data
+        delay(20); // Delay untuk memberikan waktu EEPROM untuk menulis data
     }
 
     // Menulis NULL atau karakter kosong untuk menghapus sisa data lama
