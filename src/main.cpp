@@ -11,8 +11,8 @@
 
 #define M1 0x50 // Alamat Perangkat I2C
 #define EEPROM_SIZE 512
-const char* ssid = "Hanya Untuk Masyarakat Miskin"; // SSID WiFi
-const char* password = "abogoboga"; // Password WiFi
+const char* ssid = "Telematics1"; // SSID WiFi
+const char* password = "rahasia123"; // Password WiFi
 String nopol ="";
 String vin = "";
 String postUrlTripHistory;
@@ -29,7 +29,7 @@ String websocketAddress ;
 String lastReceivedMessage = "";
 
 const int serverPort = 3100; // Port server WebSocket
-static const int RXPin = D5, TXPin = D6 ;
+static const int RXPin = D6, TXPin = D5 ;
 const uint32_t GPSBaud = 38400;
 const int buzzer = D7; // Pin untuk buzzer
 const int led = D0;
@@ -90,9 +90,9 @@ void postToServer(int isEndTrip, int tripId,float lat, float lng);
 void onMessageCallback(WebsocketsMessage message);
 void getPolygon(const char* GetMessage);
 void UpdatePolygon(String incomingMessage);
-void processGeofencingData();
+void processGeofencingData(float latitude , float longitude);
 void sendStolenLocation();
-void sendNotification();
+void sendNotification(float latitude , float longitude);
 void turnOffEngine();
 void sendLocation(String target,float lat , float lng);
 DynamicJsonDocument parsingDataJson(String vin, float lat , float lng);
@@ -152,10 +152,6 @@ void setup() {
  // timer.setInterval(2000,sendLocation)
   getTrip();
   getToServer();
-   char readData[512]; 
-   readExternalEEPROM(readData, sizeof(readData));
-   Serial.print("Data EEPROM");
-   Serial.println(readData);
 }
 
 void loop() {
@@ -251,37 +247,19 @@ void loop() {
       thirdStartTime = 0; // Reset thirdStartTime
     }
   
-  // if(millis () - raspyTime >= 1000 && gps.location.isUpdated()){
-  //     raspyTime = millis();
-  //     DynamicJsonDocument doc(200);
-  //     String raspyData;  
-      
-  //     doc["target"] = "raspy";
-  //     doc["vehicle_id"] = vin;
-  //     doc["latitude"] = String(gps.location.lat(),6); 
-  //     doc["longitude"] = String(gps.location.lng(),6);
-  //     doc.shrinkToFit();
-
-  //     serializeJson(doc,raspyData);
-  //     Serial.println(raspyData);
-  // }
     if (!isConnected) {
       webSocketConnect();
-    } else if(gps.location.isUpdated()) {
+    } 
+    if(gps.location.isUpdated()) {
       //postToServer(gps.location.lat(), gps.location.lng());
         float lat = gps.location.lat();
         float lng = gps.location.lng();
-        // Serial.print("Latitude= ");
-        // Serial.print(gps.location.lat(), 6);
-        // Serial.print(" Longitude= ");
-        // Serial.println(gps.location.lng(), 6); 
-        //processGeofencingData();
         client.poll();
       if (isSendLocation){
         sendLocation(target,lat,lng);
         }
       if (enableGeofencingData){
-      processGeofencingData();
+      processGeofencingData(lat,lng);
       }
       if (isOutOfZone){
         sound_outOfZone();
@@ -292,12 +270,30 @@ void loop() {
         //digitalWrite(led,LOW);
       }
     } 
-  if (isSendingStolenLocation) {
-      sendStolenLocation(); // Kirim lokasi "dicuri" secara terus-menerus
-    }
-    processGeofencingData();
+  // if (isSendingStolenLocation) {
+  //     sendStolenLocation(); // Kirim lokasi "dicuri" secara terus-menerus
+  //   }
+     else{
+        float lat = -6.141612;
+        float lng = 106.890087;
+        client.poll();
+      if (isSendLocation){
+        sendLocation(target,lat,lng);
+        }
+      if (enableGeofencingData){
+      processGeofencingData(lat,lng);
+      }
+      if (isOutOfZone){
+        sound_outOfZone();
+      // sendNotification();
+        }
+      else if(!isOutOfZone){
+        digitalWrite(buzzer,LOW);
+        //digitalWrite(led,LOW);
+      }
+    } 
+  }
  }
-}
 
 void webSocketConnect() {
   Serial.println("Connecting to WebSocket server...");
@@ -517,7 +513,7 @@ void getPolygon2(const char* GetMessage) {
   // Mengambil nilai dari key "type", "geo_id", dan "geo_locations"
   String geo_type = dataObject["type"].as<String>();
   String geo_id = dataObject["geo_id"].as<String>();
-  String geo_locations = dataObject["geo_locations"].as<String>();
+  String geo_locations = dataObject["geo_location"].as<String>();
 
   // Membuat JSON object untuk menyimpan data
   StaticJsonDocument<200> saveData;
@@ -592,10 +588,10 @@ void UpdatePolygon(String incomingMessage){
     }
 }
 
-void processGeofencingData() {
+void processGeofencingData(float latitude , float longitude) {
     char readData[512]; // Buffer untuk menyimpan data yang dibaca dari EEPROM
     readExternalEEPROM(readData, sizeof(readData)); // Membaca data geofencing dari EEPROM
-    Serial.println(readData);
+    //Serial.println(readData);
     // Parse data JSON yang dibaca dari EEPROM
     DynamicJsonDocument doc (512);
     DeserializationError deserializeError = deserializeJson(doc, readData);
@@ -614,18 +610,10 @@ void processGeofencingData() {
     // Ambil nilai 'geo_locations' dari data JSON
     String geo_Types = doc ["type"];
     const char* geoLocations = doc["geo_locations"];
-    // Serial.print("Type : ");
-    // Serial.print(geo_Types);
-    // Serial.print(" geo_locations: ");
-    // Serial.println(geoLocations);
 
     // // Ambil lokasi GPS saat ini
-    float lat = gps.location.lat();
-    float lng = gps.location.lng();
-    // Serial.print("Latitude= ");
-    // Serial.print(gps.location.lat(), 6);
-    // Serial.print(" Longitude= ");
-    // Serial.println(gps.location.lng(), 6);
+    float lat = latitude;
+    float lng = longitude;
     
     if(geo_Types == "POLYGON"){
     //Parsing koordinat geofencing dan melakukan pengecekan apakah lokasi GPS berada di dalam geofence
@@ -636,7 +624,7 @@ void processGeofencingData() {
       // Serial.println(result ? "Yes" : "No");
     // Set flag isOutOfZone berdasarkan hasil pengecekan geofence
       if (result == false && isOutOfZone == false) {
-        sendNotification();
+        sendNotification(lat, lng);
         isOutOfZone = true;
       }
       else if (result == true){
@@ -648,23 +636,15 @@ void processGeofencingData() {
       double centerLat, centerLng;
       float radius;
       sscanf(geoLocations, "%lf,%lf;%f", &centerLat, &centerLng, &radius);
-      // Serial.print("Center Latitude: ");
-      // Serial.println(centerLat, 10);
-      // Serial.print("Center Longitude: ");
-      // Serial.println(centerLng, 10);
-      // Serial.print("Radius: ");  
-      // Serial.println(radius);
-      double distance = TinyGPSPlus::distanceBetween(lat,lng, centerLat, centerLng);
 
-      // Serial.print("Distance from center: ");
-      // Serial.println(distance);
+      double distance = TinyGPSPlus::distanceBetween(lat,lng, centerLat, centerLng);
 
         // Periksa apakah lokasi GPS berada di dalam radius
       bool result = distance <= radius;
       // Serial.print("Is inside radius?");
       // Serial.println(result ? "Yes" : "No");
       if (result == false && isOutOfZone == false) {
-        sendNotification();
+        sendNotification(latitude,longitude);
         isOutOfZone = true;
       }
       else if (result == true){
@@ -689,24 +669,11 @@ void sendStolenLocation() {
   delay(2000);
 }
 
-void sendNotification(){
-  float lat = gps.location.lat();
-  float lng = gps.location.lng();
+void sendNotification(float latitude , float longitude){
+  float lat = latitude;
+  float lng = longitude;
   
   bool notificationIsSent = false; 
-
-  // // Membuat objek JSON
-  // DynamicJsonDocument data(128);
-  // data["lat"] = lat;
-  // data["lng"] = lng;
-
-  // // Membuat objek JSON untuk pesan lengkap
-  // DynamicJsonDocument doc(256);
-  // doc["event"] = "mobile_notification";
-  // doc["vehicle_id"] = vin;
-  // doc["target"] = "MOBILE";
-  // doc["type"] = "out_of_zone";
-  // doc["data"] = data; 
 
   DynamicJsonDocument data (128);
   data ["case"] = "out_of_zone";
@@ -844,14 +811,11 @@ void saveExternalEEPROM(const char* data) {
         Wire.write(address >> 8); // MSB dari alamat EEPROM
         Wire.write(address & 0xFF); // LSB dari alamat EEPROM
 
-            // Wire.write((int)((i >> 8) & 0xFF)); // MSB
-            // Wire.write((int)(i & 0xFF)); // LSB
-
 
         Wire.write(data[i]); // Menulis karakter JSON ke EEPROM
         Wire.endTransmission(); // Selesai transmisi
         address++; // Pindah ke alamat berikutnya di EEPROM
-        delay(20); // Delay untuk memberikan waktu EEPROM untuk menulis data
+        delay(5); // Delay untuk memberikan waktu EEPROM untuk menulis data
     }
 
     // Menulis NULL atau karakter kosong untuk menghapus sisa data lama
@@ -916,7 +880,7 @@ int parseGeoLocations(const char* geoLocations, double fences[][2]) {
 }
 
 bool isInsideGeoFence(double latitude, double longitude, double fences[][2], int numFences) {
-    double vectors[numFences][2];
+    double vectors[numFences][2]; 
     for(int i = 0; i < numFences; i++){
         vectors[i][0] = fences[i][0] - latitude;
         vectors[i][1] = fences[i][1] - longitude;
@@ -929,4 +893,4 @@ bool isInsideGeoFence(double latitude, double longitude, double fences[][2], int
         angle += (180 * acos(num / den) / M_PI);
     }
     return (angle > 355 && angle < 365);
-}
+}                                                                                                                                                  
