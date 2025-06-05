@@ -11,19 +11,19 @@
 
 #define M1 0x50 // Alamat Perangkat I2C
 #define EEPROM_SIZE 512
-const char* ssid = "Telematics1"; // SSID WiFi
-const char* password = "rahasia123"; // Password WiFi
+const char* ssid = "monumen tugu"; // SSID WiFi
+const char* password = "maulanaa123"; // Password WiFi
 String nopol ="";
-String vin = "";
+String vin = "1HGCM82633A123456";
 String postUrlTripHistory;
 String getUrlTripHistory;
-String baseUrlTripHistory ="http://103.190.28.211:3000/api/v1/trip";
+String baseUrlTripHistory ="http://203.100.57.59:3000/api/v1/trip";
 //String postUrl1 ="http://192.168.1.156:3000/api/v1/trip?vehicle_id=1HBGH1J787E";
 //String ="http://192.168.1.156:3000/api/v1/trip/latest?vehicle_id=";
-String baseUrl = "http://103.190.28.211:3000/api/v1/geofencing?vehicle_id="; // Alamat IP server API
+String baseUrl = "http://203.100.57.59:3000/api/v1/geofencing?vehicle_id="; // Alamat IP server API
 String url ;
 //String baseUrl = "http://0gw901vv-3000.asse.devtunnels.ms?vehicle_id=1HBGH1J787E"; // Alamat IP server API
-String basewebsocketAddress = "ws://103.190.28.211:3300/geofencing?vehicle_id="; // Alamat IP server API  
+String basewebsocketAddress = "ws://203.100.57.59:3300/geofencing?vehicle_id="; // Alamat IP server API  
 String websocketAddress ;
 //const char* websocketAddress = "ws://0gw901vv-3100.asse.devtunnels.ms?vehicle_id="+vin+"&device=GPS"; // Alamat IP server API
 String lastReceivedMessage = "";
@@ -122,10 +122,10 @@ void setup() {
     if (vinFromEEPROM.length() > 0) {
         Serial.println("vin dibaca dari EEPROM: " + vinFromEEPROM);
         //vin = vinFromEEPROM ;
-        vin = "1HBGH1J787E";
+        vin = "1HGCM82633A123456";
     } else {
         Serial.println("Tidak ada vin yang ditemukan di EEPROM.");
-        vin = "1HBGH1J787E";
+        vin = "1HGCM82633A123456";
     }
    url = baseUrl +vin+ "&device=GPS";
   websocketAddress = basewebsocketAddress +vin+ "&device=GPS";
@@ -274,8 +274,8 @@ void loop() {
   //     sendStolenLocation(); // Kirim lokasi "dicuri" secara terus-menerus
   //   }
      else{
-        float lat = -6.141612;
-        float lng = 106.890087;
+        float lat = -6.358726;
+        float lng = 107.292721;
         client.poll();
       if (isSendLocation){
         sendLocation(target,lat,lng);
@@ -709,7 +709,7 @@ void turnOffEngine () {
 void sendLocation(String target,float lat , float lng) {
   // if (gps.location.isUpdated()) {
     DynamicJsonDocument data = parsingDataJson(vin, lat, lng);
-    DynamicJsonDocument doc = parsingJsonWebSocket("result_current_location", target, data);  // Menggunakan 'target' di sini
+    DynamicJsonDocument doc = parsingJsonWebSocket("vehicle_location", target, data);  // Menggunakan 'target' di sini
 
     String jsonString;
     serializeJson(doc, jsonString);
@@ -723,11 +723,11 @@ void sendLocation(String target,float lat , float lng) {
 }
 
 DynamicJsonDocument parsingDataJson(String vin, float lat , float lng){
-    DynamicJsonDocument doc_data(200);
-    doc_data["vin"] = vin;
-    doc_data["lat"] = String(lat, 6);
-    doc_data["lng"] = String(lng, 6);  
-    return doc_data;
+  DynamicJsonDocument doc_data(200);
+  doc_data["vin"] = vin;
+  doc_data["latitude"] = lat;
+  doc_data["longitude"] = lng;
+  return doc_data;
 }
 
 DynamicJsonDocument parsingJsonWebSocket(String event ,String target,DynamicJsonDocument data) 
